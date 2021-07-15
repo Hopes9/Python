@@ -3,9 +3,14 @@
 import sqlite3
 import random
 import telebot
-from telebot import types
+from telebot.types import ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
-bot = telebot.TeleBot('')
+
+
+
+
+
+bot = telebot.TeleBot('1808896589:AAFFt6r5V1dKhjp6dpy0T9CM2ou7CIbe_40')
 
 list_ = ['К', 'Н', 'Б']  # камень, ножницы, бумага
 knb_check = {'К': 'Камень', 'Н': 'Ножницы', 'Б': 'Бумага'}
@@ -86,6 +91,17 @@ def top_people(message):
 
 
 list_users_how_use = []
+
+@bot.message_handler(commands=['start'])
+def start_messages(message):
+    button = KeyboardButton('Привет')
+
+    markup = ReplyKeyboardMarkup()
+    markup.add(button)
+
+
+    bot.send_message(message.chat.id, 'Привет', reply_markup = markup)
+
 
 
 @bot.message_handler(commands=['rps'])
