@@ -1,3 +1,4 @@
+
 # -*- coding: utf8 -*-
 
 import sqlite3
@@ -6,11 +7,7 @@ import telebot
 from telebot.types import ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
 
-
-
-
-
-bot = telebot.TeleBot('1808896589:AAFFt6r5V1dKhjp6dpy0T9CM2ou7CIbe_40')
+bot = telebot.TeleBot('')
 
 list_ = ['К', 'Н', 'Б']  # камень, ножницы, бумага
 knb_check = {'К': 'Камень', 'Н': 'Ножницы', 'Б': 'Бумага'}
@@ -68,23 +65,22 @@ def knb(message):
         elif (bot_knb == 'К' and you == 'Б') or (bot_knb == 'Б' and you == 'Н') or (bot_knb == 'Н' and you == 'К'):
             update_db(message)
             return 'Победа!'
-
         else:
-
             return 'Поражение!'
 
 
 def top_people(message):
     conn = sqlite3.connect('db.db')
     cursor = conn.cursor()
-    row = cursor.execute('select name from people order by count_win desc')
+    row = cursor.execute(
+        'select name, count_win from people order by count_win desc')
     row = row.fetchall()
     print(row)
     count = 1
     top_string = ''
     for i in row:
         print(i[0])
-        top_string += f'Место: {count} Имя: {i[0]}\n'
+        top_string += f'Место: {count} Имя: {i[0]} Кол-во очков: {i[1]}\n'
         count += 1
 
     return top_string
@@ -92,16 +88,34 @@ def top_people(message):
 
 list_users_how_use = []
 
+
+def f():
+    print('callback')
+
+
+@bot.callback_query_handler(f())
+def callback(call):
+    data = call.data
+    if data == 'update':
+        markup = InlineKeyboardMarkup()
+        markup.add(InlineKeyboardButton('Обновить', callback_data='update'))
+        try:
+            bot.edit_message_text(text=top_people(
+                call), chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=markup)
+        except Exception as e:
+            pass
+        # bot.send_message(message.chat.id, top_people(message), reply_markup=markup)
+
+
 @bot.message_handler(commands=['start'])
 def start_messages(message):
-    button = KeyboardButton('Привет')
 
-    markup = ReplyKeyboardMarkup()
-    markup.add(button)
+    markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=False)
 
-
-    bot.send_message(message.chat.id, 'Привет', reply_markup = markup)
-
+    markup.add(KeyboardButton('/rps к '),
+               KeyboardButton('/rps Н'), KeyboardButton('/rps Б'))
+    markup.add(KeyboardButton('Топ'))
+    bot.send_message(message.chat.id, 'Привет', reply_markup=markup)
 
 
 @bot.message_handler(commands=['rps'])
@@ -120,7 +134,11 @@ def get_text_messages(message):
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
     if message.text.lower() == 'топ':
-        bot.send_message(message.chat.id, top_people(message))
+        markup = InlineKeyboardMarkup()
+        markup.add(InlineKeyboardButton('Обновить', callback_data='update'))
+
+        bot.send_message(message.chat.id, top_people(
+            message), reply_markup=markup)
 
 
 bot.polling()
